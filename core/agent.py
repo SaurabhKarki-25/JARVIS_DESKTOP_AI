@@ -28,6 +28,30 @@ class JarvisAgent:
             log_jarvis(reply)
             return reply
 
+        # ================= SHUTDOWN =================
+        if any(x in cleaned for x in [
+            "shutdown", "shut down", "power off",
+            "turn off", "switch off"
+        ]):
+            reply = "Shutting down the system in 5 seconds"
+            log_jarvis(reply)
+            os.system("shutdown /s /t 5")
+            return reply
+
+        # ================= RESTART =================
+        if any(x in cleaned for x in ["restart", "reboot"]):
+            reply = "Restarting the system in 5 seconds"
+            log_jarvis(reply)
+            os.system("shutdown /r /t 5")
+            return reply
+
+        # ================= SLEEP =================
+        if "sleep" in cleaned:
+            reply = "Putting the system to sleep"
+            log_jarvis(reply)
+            os.system("rundll32.exe powrprof.dll,SetSuspendState 0,1,0")
+            return reply
+
         # ================= WEATHER =================
         if "weather" in cleaned:
             reply = get_weather()
@@ -35,39 +59,30 @@ class JarvisAgent:
             return reply
 
         # ================= SYSTEM INFO =================
-        if any(x in cleaned for x in ["system", "cpu", "ram", "battery"]):
+        if any(x in cleaned for x in ["cpu", "ram", "battery"]):
             reply = get_info()
             log_jarvis(reply)
             return reply
 
         # ================= TASK MANAGER =================
         if any(x in cleaned for x in [
-            "process", "processes", "desktop processes",
-            "running apps", "running applications",
-            "task manager", "tasks"
+            "task manager", "processes", "running apps",
+            "desktop processes"
         ]):
             os.system("taskmgr")
             reply = "Opening Task Manager"
             log_jarvis(reply)
             return reply
 
-        # ================= FILE MANAGER SEARCH =================
-        if "search" in cleaned and any(x in cleaned for x in ["file manager", "files", "file", "explorer"]):
-
+        # ================= FILE SEARCH =================
+        if "search" in cleaned and any(x in cleaned for x in ["file", "files", "file manager", "explorer"]):
             query = cleaned
-            for word in [
-                "search", "in", "on", "inside",
-                "file manager", "files", "file", "explorer"
-            ]:
-                query = query.replace(word, "")
-
+            for w in ["search", "in", "on", "file manager", "files", "file", "explorer"]:
+                query = query.replace(w, "")
             query = query.strip()
 
             if query:
-                subprocess.Popen(
-                    f'explorer "search-ms:query={query}"',
-                    shell=True
-                )
+                subprocess.Popen(f'explorer "search-ms:query={query}"', shell=True)
                 reply = f"Searching {query} in File Explorer"
             else:
                 reply = "What file should I search for?"
@@ -77,13 +92,7 @@ class JarvisAgent:
 
         # ================= YOUTUBE SEARCH =================
         if "search" in cleaned and "youtube" in cleaned:
-            query = (
-                cleaned.replace("search", "")
-                .replace("on youtube", "")
-                .replace("youtube", "")
-                .strip()
-            )
-
+            query = cleaned.replace("search", "").replace("youtube", "").strip()
             if query:
                 url = "https://www.youtube.com/results?search_query=" + urllib.parse.quote(query)
                 webbrowser.open(url)
@@ -96,10 +105,8 @@ class JarvisAgent:
 
         # ================= GOOGLE SEARCH =================
         if "search" in cleaned:
-            query = cleaned.replace("search", "").replace("on google", "").strip()
-            webbrowser.open(
-                "https://www.google.com/search?q=" + urllib.parse.quote(query)
-            )
+            query = cleaned.replace("search", "").strip()
+            webbrowser.open("https://www.google.com/search?q=" + urllib.parse.quote(query))
             reply = f"Searching {query} on Google"
             log_jarvis(reply)
             return reply
@@ -126,7 +133,6 @@ class JarvisAgent:
         # ================= OPEN APPS =================
         if "open" in cleaned:
 
-            # ----- WINDOWS APPS -----
             app = detect_app(cleaned)
 
             if app == "notepad":
@@ -145,11 +151,6 @@ class JarvisAgent:
                 os.system("control")
                 reply = "Opening Control Panel"
 
-            elif app == "task_manager":
-                os.system("taskmgr")
-                reply = "Opening Task Manager"
-
-            # ----- WEB APPS -----
             else:
                 web_app = detect_web_app(cleaned)
 
@@ -171,9 +172,7 @@ class JarvisAgent:
 
                 else:
                     query = cleaned.replace("open", "").strip()
-                    webbrowser.open(
-                        "https://www.google.com/search?q=" + urllib.parse.quote(query)
-                    )
+                    webbrowser.open("https://www.google.com/search?q=" + urllib.parse.quote(query))
                     reply = f"I could not find {query} on your system, searching on Google"
 
             log_jarvis(reply)
